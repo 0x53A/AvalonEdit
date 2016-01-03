@@ -341,7 +341,7 @@ namespace ICSharpCode.AvalonEdit
 
         void OnSyntaxHighlightingChanged(IHighlightingDefinition newValue)
         {
-            if (newValue != null && this.SyntaxHighlighting != null)
+            if (newValue != null && this.Colorizer != null)
                 throw new InvalidOperationException("You can only set either 'Colorizer' or 'SyntaxHighlighting'! Attempting to set 'SyntaxHighlighting' while 'Colorizer' has already been set!");
             if (colorizer != null)
             {
