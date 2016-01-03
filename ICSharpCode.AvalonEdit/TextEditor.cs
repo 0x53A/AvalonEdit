@@ -312,51 +312,95 @@ namespace ICSharpCode.AvalonEdit
 			if (textArea != null)
 				command.Execute(null, textArea);
 		}
-		#endregion
-		
-		#region Syntax highlighting
-		/// <summary>
-		/// The <see cref="SyntaxHighlighting"/> property.
-		/// </summary>
-		public static readonly DependencyProperty SyntaxHighlightingProperty =
-			DependencyProperty.Register("SyntaxHighlighting", typeof(IHighlightingDefinition), typeof(TextEditor),
-			                            new FrameworkPropertyMetadata(OnSyntaxHighlightingChanged));
-		
-		
-		/// <summary>
-		/// Gets/sets the syntax highlighting definition used to colorize the text.
-		/// </summary>
-		public IHighlightingDefinition SyntaxHighlighting {
-			get { return (IHighlightingDefinition)GetValue(SyntaxHighlightingProperty); }
-			set { SetValue(SyntaxHighlightingProperty, value); }
-		}
-		
-		IVisualLineTransformer colorizer;
-		
-		static void OnSyntaxHighlightingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-		{
-			((TextEditor)d).OnSyntaxHighlightingChanged(e.NewValue as IHighlightingDefinition);
-		}
-		
-		void OnSyntaxHighlightingChanged(IHighlightingDefinition newValue)
-		{
-			if (colorizer != null) {
-				this.TextArea.TextView.LineTransformers.Remove(colorizer);
-				colorizer = null;
-			}
-			if (newValue != null) {
-				colorizer = CreateColorizer(newValue);
-				if (colorizer != null)
-					this.TextArea.TextView.LineTransformers.Insert(0, colorizer);
-			}
-		}
-		
-		/// <summary>
-		/// Creates the highlighting colorizer for the specified highlighting definition.
-		/// Allows derived classes to provide custom colorizer implementations for special highlighting definitions.
-		/// </summary>
-		/// <returns></returns>
-		protected virtual IVisualLineTransformer CreateColorizer(IHighlightingDefinition highlightingDefinition)
+        #endregion
+
+        #region Syntax highlighting
+        /// <summary>
+        /// The <see cref="SyntaxHighlighting"/> property.
+        /// </summary>
+        public static readonly DependencyProperty SyntaxHighlightingProperty =
+            DependencyProperty.Register("SyntaxHighlighting", typeof(IHighlightingDefinition), typeof(TextEditor),
+                                        new FrameworkPropertyMetadata(OnSyntaxHighlightingChanged));
+
+
+        /// <summary>
+        /// Gets/sets the syntax highlighting definition used to colorize the text.
+        /// </summary>
+        public IHighlightingDefinition SyntaxHighlighting
+        {
+            get { return (IHighlightingDefinition)GetValue(SyntaxHighlightingProperty); }
+            set { SetValue(SyntaxHighlightingProperty, value); }
+        }
+
+        IVisualLineTransformer colorizer;
+
+        static void OnSyntaxHighlightingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((TextEditor)d).OnSyntaxHighlightingChanged(e.NewValue as IHighlightingDefinition);
+        }
+
+        void OnSyntaxHighlightingChanged(IHighlightingDefinition newValue)
+        {
+            if (newValue != null && this.SyntaxHighlighting != null)
+                throw new InvalidOperationException("You can only set either 'Colorizer' or 'SyntaxHighlighting'! Attempting to set 'SyntaxHighlighting' while 'Colorizer' has already been set!");
+            if (colorizer != null)
+            {
+                this.TextArea.TextView.LineTransformers.Remove(colorizer);
+                colorizer = null;
+            }
+            if (newValue != null)
+            {
+                colorizer = CreateColorizer(newValue);
+                if (colorizer != null)
+                    this.TextArea.TextView.LineTransformers.Insert(0, colorizer);
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="Colorizer"/> property.
+        /// </summary>
+        public static readonly DependencyProperty ColorizerProperty =
+            DependencyProperty.Register("Colorizer", typeof(IVisualLineTransformer), typeof(TextEditor),
+                                        new FrameworkPropertyMetadata(OnColorizerChanged));
+
+
+        /// <summary>
+        /// Gets/sets the syntax highlighting definition used to colorize the text.
+        /// </summary>
+        public IVisualLineTransformer Colorizer
+        {
+            get { return (IVisualLineTransformer)GetValue(ColorizerProperty); }
+            set { SetValue(ColorizerProperty, value); }
+        }
+
+        static void OnColorizerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((TextEditor)d).OnColorizerChanged(e.NewValue as IVisualLineTransformer);
+        }
+
+        void OnColorizerChanged(IVisualLineTransformer newValue)
+        {
+            if (newValue != null && this.SyntaxHighlighting != null)
+                throw new InvalidOperationException("You can only set either 'Colorizer' or 'SyntaxHighlighting'! Attempting to set 'Colorizer' while 'SyntaxHighlighting' has already been set!");
+            if (colorizer != null)
+            {
+                this.TextArea.TextView.LineTransformers.Remove(colorizer);
+                colorizer = null;
+            }
+            if (newValue != null)
+            {
+                colorizer = newValue;
+                if (colorizer != null)
+                    this.TextArea.TextView.LineTransformers.Insert(0, colorizer);
+            }
+        }
+
+        /// <summary>
+        /// Creates the highlighting colorizer for the specified highlighting definition.
+        /// Allows derived classes to provide custom colorizer implementations for special highlighting definitions.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IVisualLineTransformer CreateColorizer(IHighlightingDefinition highlightingDefinition)
 		{
 			if (highlightingDefinition == null)
 				throw new ArgumentNullException("highlightingDefinition");
